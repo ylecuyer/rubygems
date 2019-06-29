@@ -1667,7 +1667,7 @@ dependencies: []
     skip "extensions don't quite work on jruby" if Gem.java_platform?
     ext_spec
 
-    _, err = capture_io do
+    _, err = capture_output do
       refute @ext.contains_requirable_file? 'nonexistent'
     end
 
@@ -1680,7 +1680,7 @@ dependencies: []
   def test_contains_requirable_file_eh_extension_java_platform
     ext_spec(platform: Gem::Platform.new("java"))
 
-    _, err = capture_io do
+    _, err = capture_output do
       refute @ext.contains_requirable_file? 'nonexistent'
     end
 
@@ -3500,7 +3500,7 @@ Did you mean 'Ruby'?
     specfile.write "raise 'boom'"
     specfile.close
     begin
-      capture_io do
+      capture_output do
         Gem::Specification.load(specfile.path)
       end
     rescue => e
