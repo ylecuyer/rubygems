@@ -15,9 +15,11 @@ class TestGemUtil < Gem::TestCase
 
   def test_silent_system
     skip if Gem.java_platform?
-    assert_silent do
+    out, err = capture_output do
       Gem::Util.silent_system(*ruby_with_rubygems_in_load_path, '-e', 'puts "hello"; warn "hello"')
     end
+    assert_empty out
+    assert_empty err
   end
 
   def test_traverse_parents
