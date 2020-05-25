@@ -2,7 +2,7 @@
 
 require "open3"
 
-class TestProjectSanity < Minitest::Test
+class TestProjectSanity < Test::Unit::TestCase
 
   def test_manifest_is_up_to_date
     skip unless File.exist?(File.expand_path("../../../Rakefile", __FILE__))
