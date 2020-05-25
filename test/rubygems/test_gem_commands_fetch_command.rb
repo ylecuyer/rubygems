@@ -17,7 +17,7 @@ class TestGemCommandsFetchCommand < Gem::TestCase
       fetcher.gem 'a', 2
     end
 
-    refute_path_exists File.join(@tempdir, 'cache'), 'sanity check'
+    assert_path_not_exist File.join(@tempdir, 'cache'), 'sanity check'
 
     @cmd.options[:args] = %w[a]
 
@@ -29,9 +29,9 @@ class TestGemCommandsFetchCommand < Gem::TestCase
 
     a2 = specs['a-2']
 
-    assert_path_exists(File.join(@tempdir, a2.file_name),
+    assert_path_exist(File.join(@tempdir, a2.file_name),
                        "#{a2.full_name} not fetched")
-    refute_path_exists File.join(@tempdir, 'cache'),
+    assert_path_not_exist File.join(@tempdir, 'cache'),
                        'gem repository directories must not be created'
   end
 
@@ -41,7 +41,7 @@ class TestGemCommandsFetchCommand < Gem::TestCase
       fetcher.gem 'a', 2
     end
 
-    refute_path_exists File.join(@tempdir, 'cache'), 'sanity check'
+    assert_path_not_exist File.join(@tempdir, 'cache'), 'sanity check'
 
     @cmd.options[:args] = %w[a]
     @cmd.options[:version] = req('>= 0.1')
@@ -53,9 +53,9 @@ class TestGemCommandsFetchCommand < Gem::TestCase
     end
 
     a2 = specs['a-2']
-    assert_path_exists(File.join(@tempdir, a2.file_name),
+    assert_path_exist(File.join(@tempdir, a2.file_name),
                        "#{a2.full_name} not fetched")
-    refute_path_exists File.join(@tempdir, 'cache'),
+    assert_path_not_exist File.join(@tempdir, 'cache'),
                        'gem repository directories must not be created'
   end
 
@@ -76,7 +76,7 @@ class TestGemCommandsFetchCommand < Gem::TestCase
 
     a2 = specs['a-2']
 
-    assert_path_exists(File.join(@tempdir, a2.file_name),
+    assert_path_exist(File.join(@tempdir, a2.file_name),
                        "#{a2.full_name} not fetched")
   end
 
@@ -98,7 +98,7 @@ class TestGemCommandsFetchCommand < Gem::TestCase
 
     a2_pre = specs['a-2.a']
 
-    assert_path_exists(File.join(@tempdir, a2_pre.file_name),
+    assert_path_exist(File.join(@tempdir, a2_pre.file_name),
                        "#{a2_pre.full_name} not fetched")
   end
 
@@ -119,7 +119,7 @@ class TestGemCommandsFetchCommand < Gem::TestCase
 
     a1 = specs['a-1']
 
-    assert_path_exists(File.join(@tempdir, a1.file_name),
+    assert_path_exist(File.join(@tempdir, a1.file_name),
                        "#{a1.full_name} not fetched")
   end
 

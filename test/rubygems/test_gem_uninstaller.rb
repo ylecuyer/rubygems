@@ -55,7 +55,7 @@ class TestGemUninstaller < Gem::InstallerTestCase
       uninstaller.remove_all [@spec]
     end
 
-    refute_path_exists @spec.gem_dir
+    assert_path_not_exist @spec.gem_dir
   end
 
   def test_remove_executables_force_keep
@@ -150,7 +150,7 @@ class TestGemUninstaller < Gem::InstallerTestCase
 
     assert_equal expected, e.message
 
-    assert_path_exists @spec.gem_dir
+    assert_path_exist @spec.gem_dir
   end
 
   def test_remove_symlinked_gem_home
@@ -167,7 +167,7 @@ class TestGemUninstaller < Gem::InstallerTestCase
         uninstaller.remove @spec
       end
 
-      refute_path_exists @spec.gem_dir
+      assert_path_not_exist @spec.gem_dir
     end
   end
 
@@ -298,7 +298,7 @@ class TestGemUninstaller < Gem::InstallerTestCase
 
     uninstaller.uninstall
 
-    refute_path_exists spec.gem_dir
+    assert_path_not_exist spec.gem_dir
   end
 
   def test_uninstall_extension
@@ -319,12 +319,12 @@ create_makefile '#{@spec.name}'
       installer.install
     end
 
-    assert_path_exists @spec.extension_dir, 'sanity check'
+    assert_path_exist @spec.extension_dir, 'sanity check'
 
     uninstaller = Gem::Uninstaller.new @spec.name, :executables => true
     uninstaller.uninstall
 
-    refute_path_exists @spec.extension_dir
+    assert_path_not_exist @spec.extension_dir
   end
 
   def test_uninstall_nonexistent
@@ -372,16 +372,16 @@ create_makefile '#{@spec.name}'
     gem_dir = File.join @user_spec.gem_dir
 
     Gem.pre_uninstall do
-      assert_path_exists gem_dir
+      assert_path_exist gem_dir
     end
 
     Gem.post_uninstall do
-      refute_path_exists gem_dir
+      assert_path_not_exist gem_dir
     end
 
     uninstaller.uninstall
 
-    refute_path_exists gem_dir
+    assert_path_not_exist gem_dir
 
     assert_same uninstaller, @pre_uninstall_hook_arg
     assert_same uninstaller, @post_uninstall_hook_arg

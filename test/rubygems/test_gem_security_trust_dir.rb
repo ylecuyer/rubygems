@@ -54,7 +54,7 @@ class TestGemSecurityTrustDir < Gem::TestCase
 
     trusted = @trust_dir.cert_path PUBLIC_CERT
 
-    assert_path_exists trusted
+    assert_path_exist trusted
 
     mask = 0100600 & (~File.umask)
 
@@ -64,11 +64,11 @@ class TestGemSecurityTrustDir < Gem::TestCase
   end
 
   def test_verify
-    refute_path_exists @dest_dir
+    assert_path_not_exist @dest_dir
 
     @trust_dir.verify
 
-    assert_path_exists @dest_dir
+    assert_path_exist @dest_dir
 
     mask = 040700 & (~File.umask)
     mask |= 0200000 if /aix/ =~ RUBY_PLATFORM

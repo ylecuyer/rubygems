@@ -179,11 +179,11 @@ class TestGemCommandsSetupCommand < Gem::TestCase
     Dir.mktmpdir 'lib' do |dir|
       @cmd.install_lib dir
 
-      assert_path_exists File.join(dir, 'rubygems.rb')
-      assert_path_exists File.join(dir, 'rubygems/ssl_certs/rubygems.org/foo.pem')
+      assert_path_exist File.join(dir, 'rubygems.rb')
+      assert_path_exist File.join(dir, 'rubygems/ssl_certs/rubygems.org/foo.pem')
 
-      assert_path_exists File.join(dir, 'bundler.rb')
-      assert_path_exists File.join(dir, 'bundler/b.rb')
+      assert_path_exist File.join(dir, 'bundler.rb')
+      assert_path_exist File.join(dir, 'bundler/b.rb')
     end
   end
 
@@ -193,10 +193,10 @@ class TestGemCommandsSetupCommand < Gem::TestCase
     Dir.mktmpdir 'man' do |dir|
       @cmd.install_man dir
 
-      assert_path_exists File.join("#{dir}/man1", 'bundle-b.1')
-      assert_path_exists File.join("#{dir}/man1", 'bundle-b.1.txt')
-      assert_path_exists File.join("#{dir}/man5", 'gemfile.5')
-      assert_path_exists File.join("#{dir}/man5", 'gemfile.5.txt')
+      assert_path_exist File.join("#{dir}/man1", 'bundle-b.1')
+      assert_path_exist File.join("#{dir}/man1", 'bundle-b.1.txt')
+      assert_path_exist File.join("#{dir}/man5", 'gemfile.5')
+      assert_path_exist File.join("#{dir}/man5", 'gemfile.5.txt')
     end
   end
 
@@ -212,27 +212,27 @@ class TestGemCommandsSetupCommand < Gem::TestCase
 
     spec.executables.each do |e|
       if Gem.win_platform?
-        assert_path_exists File.join(bin_dir, "#{e}.bat")
+        assert_path_exist File.join(bin_dir, "#{e}.bat")
       end
 
-      assert_path_exists File.join bin_dir, Gem.default_exec_format % e
+      assert_path_exist File.join bin_dir, Gem.default_exec_format % e
     end
 
     default_dir = Gem.default_specifications_dir
 
     # expect to remove other versions of bundler gemspecs on default specification directory.
-    refute_path_exists File.join(default_dir, "bundler-1.15.4.gemspec")
-    assert_path_exists File.join(default_dir, "bundler-#{BUNDLER_VERS}.gemspec")
+    assert_path_not_exist File.join(default_dir, "bundler-1.15.4.gemspec")
+    assert_path_exist File.join(default_dir, "bundler-#{BUNDLER_VERS}.gemspec")
 
     # expect to not remove bundler-* gemspecs.
-    assert_path_exists File.join(Gem.dir, "specifications", "bundler-audit-1.0.0.gemspec")
+    assert_path_exist File.join(Gem.dir, "specifications", "bundler-audit-1.0.0.gemspec")
 
     # expect to remove normal gem that was same version. because it's promoted default gems.
-    refute_path_exists File.join(Gem.dir, "specifications", "bundler-#{BUNDLER_VERS}.gemspec")
+    assert_path_not_exist File.join(Gem.dir, "specifications", "bundler-#{BUNDLER_VERS}.gemspec")
 
-    assert_path_exists "#{Gem.dir}/gems/bundler-#{BUNDLER_VERS}"
-    assert_path_exists "#{Gem.dir}/gems/bundler-1.15.4"
-    assert_path_exists "#{Gem.dir}/gems/bundler-audit-1.0.0"
+    assert_path_exist "#{Gem.dir}/gems/bundler-#{BUNDLER_VERS}"
+    assert_path_exist "#{Gem.dir}/gems/bundler-1.15.4"
+    assert_path_exist "#{Gem.dir}/gems/bundler-audit-1.0.0"
   end
 
   def test_install_default_bundler_gem_with_force_flag
@@ -258,10 +258,10 @@ class TestGemCommandsSetupCommand < Gem::TestCase
 
       spec.executables.each do |e|
         if Gem.win_platform?
-          assert_path_exists File.join(bin_dir, "#{e}.bat")
+          assert_path_exist File.join(bin_dir, "#{e}.bat")
         end
 
-        assert_path_exists File.join bin_dir, Gem.default_exec_format % e
+        assert_path_exist File.join bin_dir, Gem.default_exec_format % e
       end
     end
   end
@@ -290,9 +290,9 @@ class TestGemCommandsSetupCommand < Gem::TestCase
 
     @cmd.remove_old_lib_files lib
 
-    files_that_go.each {|file| refute_path_exists file }
+    files_that_go.each {|file| assert_path_not_exist file }
 
-    files_that_stay.each {|file| assert_path_exists file }
+    files_that_stay.each {|file| assert_path_exist file }
   end
 
   def test_remove_old_man_files
@@ -313,9 +313,9 @@ class TestGemCommandsSetupCommand < Gem::TestCase
 
     @cmd.remove_old_man_files man
 
-    files_that_go.each {|file| refute_path_exists file }
+    files_that_go.each {|file| assert_path_not_exist file }
 
-    files_that_stay.each {|file| assert_path_exists file }
+    files_that_stay.each {|file| assert_path_exist file }
   end
 
   def test_show_release_notes

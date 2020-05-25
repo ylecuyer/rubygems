@@ -245,7 +245,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.build
 
     assert_equal Gem::VERSION, spec.rubygems_version
-    assert_path_exists spec.file_name
+    assert_path_exist spec.file_name
 
     reader = Gem::Package.new spec.file_name
     assert_equal spec, reader.spec
@@ -284,7 +284,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.build
 
     assert_equal Gem::VERSION, spec.rubygems_version
-    assert_path_exists spec.file_name
+    assert_path_exist spec.file_name
 
     reader = Gem::Package.new spec.file_name
     assert reader.verify
@@ -327,7 +327,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.build
 
     assert_equal Gem::VERSION, spec.rubygems_version
-    assert_path_exists spec.file_name
+    assert_path_exist spec.file_name
 
     reader = Gem::Package.new spec.file_name
     assert reader.verify
@@ -390,7 +390,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.build
 
     assert_equal Gem::VERSION, spec.rubygems_version
-    assert_path_exists spec.file_name
+    assert_path_exist spec.file_name
 
     reader = Gem::Package.new spec.file_name
     assert reader.verify
@@ -427,7 +427,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.build
 
     assert_equal Gem::VERSION, spec.rubygems_version
-    assert_path_exists spec.file_name
+    assert_path_exist spec.file_name
 
     reader = Gem::Package.new spec.file_name
     assert reader.verify
@@ -481,7 +481,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.extract_files @destination
 
     extracted = File.join @destination, 'lib/code.rb'
-    assert_path_exists extracted
+    assert_path_exist extracted
 
     mask = 0100666 & (~File.umask)
 
@@ -512,7 +512,7 @@ class TestGemPackage < Gem::Package::TarTestCase
 
     package.extract_files @destination
 
-    assert_path_exists @destination
+    assert_path_exist @destination
   end
 
   def test_extract_tar_gz_absolute
@@ -555,7 +555,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     end
 
     extracted = File.join @destination, 'lib/foo.rb'
-    assert_path_exists extracted
+    assert_path_exist extracted
     assert_equal '../relative.rb',
                  File.readlink(extracted)
     assert_equal 'hi',
@@ -615,7 +615,7 @@ class TestGemPackage < Gem::Package::TarTestCase
       package.extract_tar_gz tgz_io, destination_subdir
     end
 
-    assert_path_exists destination_user_subdir
+    assert_path_exist destination_user_subdir
 
     if Gem::Package::PathError === e
       assert_equal("installing into parent path #{destination_user_subdir} of " +
@@ -641,10 +641,10 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.extract_tar_gz tgz_io, @destination
 
     extracted = File.join @destination, 'lib/foo.rb'
-    assert_path_exists extracted
+    assert_path_exist extracted
 
     extracted = File.join @destination, 'lib/foo'
-    assert_path_exists extracted
+    assert_path_exist extracted
   end
 
   def test_extract_tar_gz_dot_slash
@@ -659,7 +659,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.extract_tar_gz tgz_io, @destination
 
     extracted = File.join @destination, 'dot_slash.rb'
-    assert_path_exists extracted
+    assert_path_exist extracted
   end
 
   def test_extract_tar_gz_dot_file
@@ -674,7 +674,7 @@ class TestGemPackage < Gem::Package::TarTestCase
     package.extract_tar_gz tgz_io, @destination
 
     extracted = File.join @destination, '.dot_file.rb'
-    assert_path_exists extracted
+    assert_path_exist extracted
   end
 
   if Gem.win_platform?
@@ -690,7 +690,7 @@ class TestGemPackage < Gem::Package::TarTestCase
       package.extract_tar_gz tgz_io, @destination.upcase
 
       extracted = File.join @destination, 'foo/file.rb'
-      assert_path_exists extracted
+      assert_path_exist extracted
     end
   end
 

@@ -25,7 +25,7 @@ class TestGemSourceGit < Gem::TestCase
   def test_checkout
     @source.checkout
 
-    assert_path_exists File.join @source.install_dir, 'a.gemspec'
+    assert_path_exist File.join @source.install_dir, 'a.gemspec'
   end
 
   def test_checkout_master
@@ -40,7 +40,7 @@ class TestGemSourceGit < Gem::TestCase
 
     @source.checkout
 
-    assert_path_exists File.join @source.install_dir, 'b.gemspec'
+    assert_path_exist File.join @source.install_dir, 'b.gemspec'
   end
 
   def test_checkout_local
@@ -50,7 +50,7 @@ class TestGemSourceGit < Gem::TestCase
 
     install_dir = File.join Gem.dir, 'bundler', 'gems', "a-#{@head[0..11]}"
 
-    refute_path_exists File.join install_dir, 'a.gemspec'
+    assert_path_not_exist File.join install_dir, 'a.gemspec'
   end
 
   def test_checkout_local_cached
@@ -60,7 +60,7 @@ class TestGemSourceGit < Gem::TestCase
 
     @source.checkout
 
-    assert_path_exists File.join @source.install_dir, 'a.gemspec'
+    assert_path_exist File.join @source.install_dir, 'a.gemspec'
   end
 
   def test_checkout_submodules
@@ -76,14 +76,14 @@ class TestGemSourceGit < Gem::TestCase
 
     source.checkout
 
-    assert_path_exists File.join source.install_dir, 'a.gemspec'
-    assert_path_exists File.join source.install_dir, 'b/b.gemspec'
+    assert_path_exist File.join source.install_dir, 'a.gemspec'
+    assert_path_exist File.join source.install_dir, 'b/b.gemspec'
   end
 
   def test_cache
     assert @source.cache
 
-    assert_path_exists @source.repo_cache_dir
+    assert_path_exist @source.repo_cache_dir
 
     Dir.chdir @source.repo_cache_dir do
       assert_equal @head, Gem::Util.popen(@git, 'rev-parse', 'master').strip
@@ -95,7 +95,7 @@ class TestGemSourceGit < Gem::TestCase
 
     @source.cache
 
-    refute_path_exists @source.repo_cache_dir
+    assert_path_not_exist @source.repo_cache_dir
   end
 
   def test_dir_shortref

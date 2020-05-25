@@ -266,7 +266,7 @@ class TestGemSecurity < Gem::TestCase
 
     @SEC.write key, path
 
-    assert_path_exists path
+    assert_path_exist path
 
     key_from_file = File.read path
 
@@ -282,7 +282,7 @@ class TestGemSecurity < Gem::TestCase
 
     @SEC.write key, path, 0600, passphrase
 
-    assert_path_exists path
+    assert_path_exist path
 
     key_from_file = OpenSSL::PKey::RSA.new File.read(path), passphrase
 
@@ -300,7 +300,7 @@ class TestGemSecurity < Gem::TestCase
 
     @SEC.write key, path, 0600, passphrase, cipher
 
-    assert_path_exists path
+    assert_path_exist path
 
     key_file_contents = File.read(path)
 
