@@ -3,7 +3,6 @@ require 'rubygems/installer_test_case'
 require 'rubygems/commands/uninstall_command'
 
 class TestGemCommandsUninstallCommand < Gem::InstallerTestCase
-
   def setup
     super
     @cmd = Gem::Commands::UninstallCommand.new
@@ -361,6 +360,7 @@ class TestGemCommandsUninstallCommand < Gem::InstallerTestCase
     end
 
     assert_equal %w[default-1], Gem::Specification.all_names.sort
+    assert_equal "INFO:  Uninstalled all gems in #{@gemhome}", @ui.output.split("\n").last
   end
 
   def test_execute_outside_gem_home
@@ -501,5 +501,4 @@ WARNING:  Use your OS package manager to uninstall vendor gems
       end
     end
   end
-
 end

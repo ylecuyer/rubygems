@@ -4,7 +4,6 @@ require 'rubygems/source'
 require 'rubygems/indexer'
 
 class TestGemSource < Gem::TestCase
-
   def tuple(*args)
     Gem::NameTuple.new(*args)
   end
@@ -55,8 +54,6 @@ class TestGemSource < Gem::TestCase
   end
 
   def test_dependency_resolver_set_file_uri
-    skip 'install builder gem' unless defined? Builder::XChar
-
     Gem::Indexer.new(@tempdir).generate_index
 
     source = Gem::Source.new "file://#{@tempdir}/"
@@ -125,7 +122,7 @@ class TestGemSource < Gem::TestCase
   end
 
   def test_load_specs
-    released = @source.load_specs(:released).map { |spec| spec.full_name }
+    released = @source.load_specs(:released).map {|spec| spec.full_name }
     assert_equal %W[a-2 a-1 b-2], released
 
     cache_dir = File.join Gem.spec_cache_dir, 'gems.example.com%80'
@@ -248,5 +245,4 @@ class TestGemSource < Gem::TestCase
     distance_threshold = 5
     assert rubygems_source.typo_squatting?("rubysertgems.org", distance_threshold)
   end
-
 end

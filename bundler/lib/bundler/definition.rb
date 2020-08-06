@@ -402,12 +402,10 @@ module Bundler
              "updated #{Bundler.default_lockfile.relative_path_from(SharedHelpers.pwd)} to version control."
 
       unless explicit_flag
-        suggested_command = if Bundler.settings.locations("frozen")[:global]
+        suggested_command = if Bundler.settings.locations("frozen").keys.&([:global, :local]).any?
           "bundle config unset frozen"
         elsif Bundler.settings.locations("deployment").keys.&([:global, :local]).any?
           "bundle config unset deployment"
-        else
-          "bundle install --no-deployment"
         end
         msg << "\n\nIf this is a development machine, remove the #{Bundler.default_gemfile} " \
                "freeze \nby running `#{suggested_command}`."
@@ -456,9 +454,9 @@ module Bundler
       @locked_deps.each  {|name, d| both_sources[name][1] = d.source }
 
       both_sources.each do |name, (dep, lock_source)|
-        next unless (dep.nil? && !lock_source.nil?) || (!dep.nil? && !lock_source.nil? && !lock_source.can_lock?(dep))
+        next if lock_source.nil? || (dep && lock_source.can_lock?(dep))
         gemfile_source_name = (dep && dep.source) || "no specified source"
-        lockfile_source_name = lock_source || "no specified source"
+        lockfile_source_name = lock_source
         changed << "* #{name} from `#{gemfile_source_name}` to `#{lockfile_source_name}`"
       end
 
@@ -986,8 +984,9 @@ module Bundler
       @locked_gems.specs.reduce({}) do |requirements, locked_spec|
         name = locked_spec.name
         dependency = dependencies_by_name[name]
+        next requirements unless dependency
         next requirements if @locked_gems.dependencies[name] != dependency
-        next requirements if dependency && dependency.source.is_a?(Source::Path)
+        next requirements if dependency.source.is_a?(Source::Path)
         dep = Gem::Dependency.new(name, ">= #{locked_spec.version}")
         requirements[name] = DepProxy.new(dep, locked_spec.platform)
         requirements

@@ -5,7 +5,6 @@ require 'rubygems/gemcutter_utilities'
 require 'rubygems/package'
 
 class Gem::Commands::PushCommand < Gem::Command
-
   include Gem::LocalRemoteOptions
   include Gem::GemcutterUtilities
 
@@ -52,23 +51,14 @@ The push command will use ~/.gem/credentials to authenticate to a server, but yo
     gem_name = get_one_gem_name
     default_gem_server, push_host = get_hosts_for(gem_name)
 
-    default_host = nil
-    user_defined_host = nil
-
-    if @user_defined_host
-      user_defined_host = options[:host]
-    else
-      default_host = options[:host]
-    end
-
-    @host = if user_defined_host
-              user_defined_host
+    @host = if @user_defined_host
+              options[:host]
             elsif default_gem_server
               default_gem_server
             elsif push_host
               push_host
             else
-              default_host
+              options[:host]
             end
 
     sign_in @host
@@ -79,17 +69,7 @@ The push command will use ~/.gem/credentials to authenticate to a server, but yo
   def send_gem(name)
     args = [:post, "api/v1/gems"]
 
-    gem_data = Gem::Package.new(name)
-
-    unless @host
-      @host = gem_data.spec.metadata['default_gem_server']
-    end
-
-    push_host = nil
-
-    if gem_data.spec.metadata.has_key?('allowed_push_host')
-      push_host = gem_data.spec.metadata['allowed_push_host']
-    end
+    _, push_host = get_hosts_for(name)
 
     @host ||= push_host
 
@@ -123,5 +103,4 @@ The push command will use ~/.gem/credentials to authenticate to a server, but yo
       gem_metadata["allowed_push_host"]
     ]
   end
-
 end

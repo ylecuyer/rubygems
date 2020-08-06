@@ -3,7 +3,6 @@ require 'rubygems/test_case'
 require 'rubygems/commands/update_command'
 
 class TestGemCommandsUpdateCommand < Gem::TestCase
-
   def setup
     super
     common_installer_setup
@@ -236,6 +235,25 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     assert_empty @ui.output
     assert_equal "ERROR:  Gem names are not allowed with the --system option\n",
                  @ui.error
+  end
+
+  def test_execute_system_with_disabled_update
+    old_disable_system_update_message = Gem.disable_system_update_message
+    Gem.disable_system_update_message = "Please use package manager instead."
+
+    @cmd.options[:args] = []
+    @cmd.options[:system] = true
+
+    assert_raises Gem::MockGemUi::TermError do
+      use_ui @ui do
+        @cmd.execute
+      end
+    end
+
+    assert_empty @ui.output
+    assert_equal "ERROR:  Please use package manager instead.\n", @ui.error
+  ensure
+    Gem.disable_system_update_message = old_disable_system_update_message
   end
 
   # before:
@@ -628,5 +646,4 @@ class TestGemCommandsUpdateCommand < Gem::TestCase
     assert_equal "  a-2", out.shift
     assert_empty out
   end
-
 end

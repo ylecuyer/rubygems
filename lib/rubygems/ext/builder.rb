@@ -5,10 +5,9 @@
 # See LICENSE.txt for permissions.
 #++
 
-require 'rubygems/user_interaction'
+require_relative '../user_interaction'
 
 class Gem::Ext::Builder
-
   include Gem::UserInteraction
 
   ##
@@ -227,5 +226,4 @@ EOF
 
     destination
   end
-
 end

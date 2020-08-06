@@ -8,7 +8,6 @@ require 'rubygems/user_interaction'
 # Gem::Security::Policies.
 
 class Gem::Security::Policy
-
   include Gem::UserInteraction
 
   attr_reader :name
@@ -25,8 +24,6 @@ class Gem::Security::Policy
   # options.
 
   def initialize(name, policy = {}, opt = {})
-    require 'openssl'
-
     @name = name
 
     @opt = opt
@@ -76,7 +73,7 @@ class Gem::Security::Policy
 
   def check_data(public_key, digest, signature, data)
     raise Gem::Security::Exception, "invalid signature" unless
-      public_key.verify digest.new, signature, data.digest
+      public_key.verify digest, signature, data.digest
 
     true
   end
@@ -224,7 +221,7 @@ class Gem::Security::Policy
     end
 
     opt       = @opt
-    digester  = Gem::Security::DIGEST_ALGORITHM
+    digester  = Gem::Security.create_digest
     trust_dir = opt[:trust_dir]
     time      = Time.now
 
@@ -291,5 +288,4 @@ class Gem::Security::Policy
   end
 
   alias to_s name # :nodoc:
-
 end

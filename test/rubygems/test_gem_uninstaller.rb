@@ -3,7 +3,6 @@ require 'rubygems/installer_test_case'
 require 'rubygems/uninstaller'
 
 class TestGemUninstaller < Gem::InstallerTestCase
-
   def setup
     super
     @installer = setup_base_installer
@@ -154,6 +153,8 @@ class TestGemUninstaller < Gem::InstallerTestCase
   end
 
   def test_remove_symlinked_gem_home
+    skip "Symlinks not supported or not enabled" unless symlink_supported?
+
     Dir.mktmpdir("gem_home") do |dir|
       symlinked_gem_home = "#{dir}/#{File.basename(@gemhome)}"
 
@@ -663,5 +664,4 @@ create_makefile '#{@spec.name}'
 
     refute File.exist?(plugin_path), 'last version uninstalled, but plugin still present'
   end
-
 end

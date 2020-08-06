@@ -3,7 +3,6 @@ require 'rubygems/test_case'
 require 'rubygems/command_manager'
 
 class TestGemCommandManager < Gem::TestCase
-
   PROJECT_DIR = File.expand_path('../../..', __FILE__).tap(&Gem::UNTAINT)
 
   def setup
@@ -281,7 +280,7 @@ class TestGemCommandManager < Gem::TestCase
     foo_command = Class.new(Gem::Command) do
       extend Gem::Deprecate
 
-      deprecate_command
+      rubygems_deprecate_command
 
       def execute
         say "pew pew!"
@@ -300,5 +299,4 @@ class TestGemCommandManager < Gem::TestCase
   ensure
     Gem::Commands.send(:remove_const, :FooCommand)
   end
-
 end

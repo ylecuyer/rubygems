@@ -17,6 +17,18 @@ module Spec
       Gem::Platform.new(platform)
     end
 
+    # Returns a number smaller than the size of the index. Useful for specs that
+    # need the API request limit to be reached for some reason.
+    def low_api_request_limit_for(gem_repo)
+      all_gems = Dir[gem_repo.join("gems/*.gem")]
+
+      all_gem_names = all_gems.map do |file|
+        File.basename(file, ".gem").match(/\A(?<gem_name>[^-]+)-.*\z/)[:gem_name]
+      end.uniq
+
+      (all_gem_names - ["bundler"]).size
+    end
+
     def build_repo1
       build_repo gem_repo1 do
         build_gem "rack", %w[0.9.1 1.0.0] do |s|
@@ -64,7 +76,7 @@ module Spec
           s.add_dependency "activesupport", ">= 2.0.0"
         end
 
-        build_gem "rails_fail" do |s|
+        build_gem "rails_pinned_to_old_activesupport" do |s|
           s.add_dependency "activesupport", "= 1.2.3"
         end
 
@@ -394,7 +406,7 @@ module Spec
       @_build_repo = File.basename(path)
       yield
       with_gem_path_as Path.base_system_gems do
-        gem_command! :generate_index, :dir => path
+        gem_command :generate_index, :dir => path
       end
     ensure
       @_build_path = nil
@@ -436,13 +448,13 @@ module Spec
       opts = args.last.is_a?(Hash) ? args.last : {}
       builder = opts[:bare] ? GitBareBuilder : GitBuilder
       spec = build_with(builder, name, args, &block)
-      GitReader.new(opts[:path] || lib_path(spec.full_name))
+      GitReader.new(self, opts[:path] || lib_path(spec.full_name))
     end
 
     def update_git(name, *args, &block)
       opts = args.last.is_a?(Hash) ? args.last : {}
       spec = build_with(GitUpdater, name, args, &block)
-      GitReader.new(opts[:path] || lib_path(spec.full_name))
+      GitReader.new(self, opts[:path] || lib_path(spec.full_name))
     end
 
     def build_plugin(name, *args, &blk)
@@ -548,11 +560,6 @@ module Spec
           s.license     = "MIT"
         end
         @files = {}
-      end
-
-      def capture(cmd, dir)
-        output, _status = Open3.capture2e(cmd, :chdir => dir)
-        output
       end
 
       def method_missing(*args, &blk)
@@ -666,12 +673,12 @@ module Spec
         path = options[:path] || _default_path
         source = options[:source] || "git@#{path}"
         super(options.merge(:path => path, :source => source))
-        capture("git init", path)
-        capture("git add *", path)
-        capture("git config user.email \"lol@wut.com\"", path)
-        capture("git config user.name \"lolwut\"", path)
-        capture("git config commit.gpgsign false", path)
-        capture("git commit -m \"OMG INITIAL COMMIT\"", path)
+        @context.git("init", path)
+        @context.git("add *", path)
+        @context.git("config user.email lol@wut.com", path)
+        @context.git("config user.name lolwut", path)
+        @context.git("config commit.gpgsign false", path)
+        @context.git("commit -m OMG_INITIAL_COMMIT", path)
       end
     end
 
@@ -679,69 +686,57 @@ module Spec
       def _build(options)
         path = options[:path] || _default_path
         super(options.merge(:path => path))
-        capture("git init --bare", path)
+        @context.git("init --bare", path)
       end
     end
 
     class GitUpdater < LibBuilder
-      def silently(str, dir)
-        output, _error, _status = Open3.capture3(str, :chdir => dir)
-        output
-      end
-
       def _build(options)
         libpath = options[:path] || _default_path
         update_gemspec = options[:gemspec] || false
         source = options[:source] || "git@#{libpath}"
 
-        silently "git checkout master", libpath
+        @context.git "checkout master", libpath
 
         if branch = options[:branch]
           raise "You can't specify `master` as the branch" if branch == "master"
           escaped_branch = Shellwords.shellescape(branch)
 
-          if capture("git branch | grep #{escaped_branch}", libpath).empty?
-            silently("git branch #{escaped_branch}", libpath)
+          if @context.git("branch -l #{escaped_branch}", libpath).empty?
+            @context.git("branch #{escaped_branch}", libpath)
           end
 
-          silently("git checkout #{escaped_branch}", libpath)
+          @context.git("checkout #{escaped_branch}", libpath)
         elsif tag = options[:tag]
-          capture("git tag #{Shellwords.shellescape(tag)}", libpath)
+          @context.git("tag #{Shellwords.shellescape(tag)}", libpath)
         elsif options[:remote]
-          silently("git remote add origin #{options[:remote]}", libpath)
+          @context.git("remote add origin #{options[:remote]}", libpath)
         elsif options[:push]
-          silently("git push origin #{options[:push]}", libpath)
+          @context.git("push origin #{options[:push]}", libpath)
         end
 
-        current_ref = silently("git rev-parse HEAD", libpath).strip
+        current_ref = @context.git("rev-parse HEAD", libpath).strip
         _default_files.keys.each do |path|
           _default_files[path] += "\n#{Builders.constantize(name)}_PREV_REF = '#{current_ref}'"
         end
         super(options.merge(:path => libpath, :gemspec => update_gemspec, :source => source))
-        capture("git add *", libpath)
-        capture("git commit -m \"BUMP\"", libpath)
+        @context.git("add *", libpath)
+        @context.git("commit -m BUMP", libpath, :raise_on_error => false)
       end
     end
 
     class GitReader
-      attr_reader :path
+      attr_reader :context, :path
 
-      def initialize(path)
+      def initialize(context, path)
+        @context = context
         @path = path
       end
 
       def ref_for(ref, len = nil)
-        ref = git "rev-parse #{ref}"
+        ref = context.git "rev-parse #{ref}", path
         ref = ref[0..len] if len
         ref
-      end
-
-    private
-
-      def git(cmd)
-        Bundler::SharedHelpers.with_clean_git_env do
-          Open3.capture2e("git #{cmd}", :chdir => path)[0].strip
-        end
       end
     end
 
@@ -758,14 +753,14 @@ module Spec
         elsif opts[:skip_validation]
           @context.gem_command "build --force #{@spec.name}", :dir => lib_path
         else
-          @context.gem_command! "build #{@spec.name}", :dir => lib_path
+          @context.gem_command "build #{@spec.name}", :dir => lib_path
         end
 
         gem_path = File.expand_path("#{@spec.full_name}.gem", lib_path)
         if opts[:to_system]
-          @context.system_gems gem_path, :keep_path => true
+          @context.system_gems gem_path
         elsif opts[:to_bundle]
-          @context.system_gems gem_path, :path => :bundle_path, :keep_path => true
+          @context.system_gems gem_path, :path => @context.default_bundle_path
         else
           FileUtils.mv(gem_path, destination)
         end

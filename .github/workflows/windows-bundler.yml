@@ -6,14 +6,18 @@ on:
   push:
     branches:
       - master
+      - 3.2
 
 jobs:
   windows_bundler:
-    runs-on: windows-latest
+    runs-on: windows-2019
+
+    env:
+      RGV: ..
 
     strategy:
       matrix:
-        ruby: [ '2.4', '2.5', '2.6' ]
+        ruby: [ '2.4', '2.5', '2.6', '2.7' ]
 
     steps:
       - uses: actions/checkout@v2
@@ -29,6 +33,6 @@ jobs:
         shell: bash
       - name: Run specs
         run: |
-          bin/parallel_rspec spec
+          bin/parallel_rspec
         working-directory: ./bundler
         shell: bash
