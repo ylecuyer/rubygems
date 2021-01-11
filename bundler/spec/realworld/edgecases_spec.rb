@@ -323,11 +323,13 @@ RSpec.describe "real world edgecases", :realworld => true, :sometimes => true do
 
     bundle :lock, :env => { "DEBUG_RESOLVER" => "1" }
 
-    if Bundler.feature_flag.bundler_3_mode?
-      expect(out).to include("BUNDLER: Finished resolution (1336 steps)")
+    expected_steps = if Bundler.feature_flag.bundler_3_mode?
+      RUBY_PLATFORM =~ /darwin/ ? 1331 : 1336
     else
-      expect(out).to include("BUNDLER: Finished resolution (1395 steps)")
+      RUBY_PLATFORM =~ /darwin/ ? 1389 : 1395
     end
+
+    expect(out).to include("BUNDLER: Finished resolution (#{expected_steps} steps)")
   end
 
   it "doesn't hang on tricky gemfile" do
