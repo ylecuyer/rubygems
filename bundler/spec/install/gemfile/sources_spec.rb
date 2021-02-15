@@ -527,6 +527,77 @@ RSpec.describe "bundle install with gems on multiple sources" do
       end
     end
 
+    context "when a pinned gem has an indirect dependency with more than one level of indirection in the default source " do
+      before do
+        build_repo gem_repo3 do
+          build_gem "handsoap", "0.2.5.5" do |s|
+            s.add_dependency "nokogiri", ">= 1.2.3"
+          end
+        end
+
+        update_repo gem_repo2 do
+          build_gem "nokogiri", "1.11.1" do |s|
+            s.add_dependency "racca", "~> 1.4"
+          end
+
+          build_gem "racca", "1.5.2"
+        end
+
+        gemfile <<-G
+          source "#{file_uri_for(gem_repo2)}"
+
+          source "#{file_uri_for(gem_repo3)}" do
+            gem "handsoap"
+          end
+
+          gem "nokogiri"
+        G
+      end
+
+      it "installs from the default source without any warning and generates a proper lockfile" do
+        expected_lockfile = <<~L
+          GEM
+            remote: #{file_uri_for(gem_repo2)}/
+            specs:
+              nokogiri (1.11.1)
+                racca (~> 1.4)
+              racca (1.5.2)
+
+          GEM
+            remote: #{file_uri_for(gem_repo3)}/
+            specs:
+              handsoap (0.2.5.5)
+                nokogiri (>= 1.2.3)
+
+          PLATFORMS
+            #{specific_local_platform}
+
+          DEPENDENCIES
+            handsoap!
+            nokogiri
+
+          BUNDLED WITH
+             #{Bundler::VERSION}
+        L
+
+        bundle "install --verbose"
+        expect(err).not_to include("Warning")
+        expect(the_bundle).to include_gems("handsoap 0.2.5.5", "nokogiri 1.11.1", "racca 1.5.2")
+        expect(the_bundle).to include_gems("handsoap 0.2.5.5", :source => "remote3")
+        expect(the_bundle).to include_gems("nokogiri 1.11.1", "racca 1.5.2", :source => "remote2")
+        expect(lockfile).to eq(expected_lockfile)
+
+        # Even if the gems are already installed
+        FileUtils.rm bundled_app_lock
+        bundle "install --verbose"
+        expect(err).not_to include("Warning")
+        expect(the_bundle).to include_gems("handsoap 0.2.5.5", "nokogiri 1.11.1", "racca 1.5.2")
+        expect(the_bundle).to include_gems("handsoap 0.2.5.5", :source => "remote3")
+        expect(the_bundle).to include_gems("nokogiri 1.11.1", "racca 1.5.2", :source => "remote2")
+        expect(lockfile).to eq(expected_lockfile)
+      end
+    end
+
     context "with a gem that is only found in the wrong source" do
       before do
         build_repo gem_repo3 do
