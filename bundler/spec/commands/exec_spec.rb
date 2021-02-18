@@ -804,11 +804,19 @@ RSpec.describe "bundle exec" do
       let(:exit_code) { Bundler::GemNotFound.new.status_code }
       let(:expected) { "" }
       let(:expected_err) { <<-EOS.strip }
-\e[31mCould not find gem 'rack (= 2)' in any of the gem sources listed in your Gemfile.\e[0m
+\e[31mCould not find gem 'rack (= 2)' in locally installed gems.
+The source contains the following versions of 'rack': 0.9.1, 1.0.0\e[0m
 \e[33mRun `bundle install` to install missing gems.\e[0m
       EOS
 
-      it_behaves_like "it runs"
+      it "runs" do
+        skip "https://github.com/rubygems/rubygems/issues/3351" if Gem.win_platform?
+
+        subject
+        expect(exitstatus).to eq(exit_code)
+        expect(err).to eq(expected_err)
+        expect(out).to eq(expected)
+      end
     end
 
     context "when Bundler.setup fails", :bundler => "3" do
