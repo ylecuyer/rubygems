@@ -515,6 +515,9 @@ RSpec.describe "bundle install with gems on multiple sources" do
         lockfile <<-L
           GEM
             remote: #{file_uri_for(gem_repo1)}
+            specs:
+
+          GEM
             remote: #{file_uri_for(gem_repo3)}
             specs:
               rack (0.9.1)
@@ -537,6 +540,84 @@ RSpec.describe "bundle install with gems on multiple sources" do
       # Reproduction of https://github.com/rubygems/bundler/issues/3298
       it "does not unlock the installed gem on exec" do
         expect(the_bundle).to include_gems("rack 0.9.1")
+      end
+    end
+
+    context "with a lockfile with aggregated rubygems sources" do
+      let(:aggregate_gem_section_lockfile) do
+        <<~L
+          GEM
+            remote: #{file_uri_for(gem_repo1)}/
+            remote: #{file_uri_for(gem_repo3)}/
+            specs:
+              rack (0.9.1)
+
+          PLATFORMS
+            #{specific_local_platform}
+
+          DEPENDENCIES
+            rack!
+
+          BUNDLED WITH
+             #{Bundler::VERSION}
+        L
+      end
+
+      let(:split_gem_section_lockfile) do
+        <<~L
+          GEM
+            remote: #{file_uri_for(gem_repo1)}/
+            specs:
+
+          GEM
+            remote: #{file_uri_for(gem_repo3)}/
+            specs:
+              rack (0.9.1)
+
+          PLATFORMS
+            #{specific_local_platform}
+
+          DEPENDENCIES
+            rack!
+
+          BUNDLED WITH
+             #{Bundler::VERSION}
+        L
+      end
+
+      before do
+        build_repo gem_repo3 do
+          build_gem "rack", "0.9.1"
+        end
+
+        gemfile <<-G
+          source "#{file_uri_for(gem_repo1)}"
+          source "#{file_uri_for(gem_repo3)}" do
+            gem 'rack'
+          end
+        G
+
+        lockfile aggregate_gem_section_lockfile
+      end
+
+      it "installs the existing lockfile but prints a warning", :bundler => "< 3" do
+        bundle "config set --local deployment true"
+
+        bundle "install"
+
+        expect(lockfile).to eq(aggregate_gem_section_lockfile)
+        expect(err).to include("Your lockfile contains a single rubygems source section with multiple remotes, which is insecure.")
+        expect(the_bundle).to include_gems("rack 0.9.1", :source => "remote3")
+      end
+
+      it "refuses to install the existing lockfile and prints an error", :bundler => "3" do
+        bundle "config set --local deployment true"
+
+        bundle "install", :raise_on_error =>false
+
+        expect(lockfile).to eq(aggregate_gem_section_lockfile)
+        expect(err).to include("Your lockfile contains a single rubygems source section with multiple remotes, which is insecure.")
+        expect(out).to be_empty
       end
     end
 
@@ -721,11 +802,7 @@ RSpec.describe "bundle install with gems on multiple sources" do
       G
     end
 
-    it "keeps the old version", :bundler => "< 3" do
-      expect(the_bundle).to include_gems("rack 1.0.0")
-    end
-
-    it "installs the higher version in the new repo", :bundler => "3" do
+    it "installs the higher version in the new repo" do
       expect(the_bundle).to include_gems("rack 1.2")
     end
   end
