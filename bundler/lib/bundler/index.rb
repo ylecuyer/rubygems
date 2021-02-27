@@ -80,6 +80,7 @@ module Bundler
 
     def self.sort_specs(specs)
       specs.sort_by do |s|
+        next unless s
         platform_string = s.platform.to_s
         [s.version, platform_string == RUBY ? NULL : platform_string]
       end
