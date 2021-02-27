@@ -38,7 +38,7 @@ module Bundler
           others = lookup[dep.name] if match_current_platform
           message = "Unable to find a spec satisfying #{dep} in the set. Perhaps the lockfile is corrupted?"
           message += " Found #{others.join(", ")} that did not match the current platform." if others && !others.empty?
-          raise GemNotFound, message
+          raise GemNotFound, message unless already_activated?
         end
       end
 
@@ -76,6 +76,10 @@ module Bundler
       lookup.dup
     end
 
+    def already_activated?
+      true
+    end
+
     def materialize(deps, missing_specs = nil)
       materialized = self.for(deps, [], false, true, !missing_specs).to_a
       deps = materialized.map(&:name).uniq
@@ -85,9 +89,9 @@ module Bundler
         spec = s.__materialize__
         unless spec
           unless missing_specs
-            raise GemNotFound, "Could not find #{s.full_name} in any of the sources"
+            raise GemNotFound, "coucou !Could not find #{s.full_name} in any of the sources" if !already_activated?
           end
-          missing_specs << s
+          missing_specs << s unless already_activated?
         end
         spec
       end
@@ -153,7 +157,7 @@ module Bundler
     private
 
     def sorted
-      rake = @specs.find {|s| s.name == "rake" }
+      rake = @specs.find {|s| s&.name == "rake" }
       begin
         @sorted ||= ([rake] + tsort).compact.uniq
       rescue TSort::Cyclic => error
@@ -171,7 +175,9 @@ module Bundler
     def lookup
       @lookup ||= begin
         lookup = Hash.new {|h, k| h[k] = [] }
+        @specs.compact!
         Index.sort_specs(@specs).reverse_each do |s|
+          next unless s
           lookup[s.name] << s
         end
         lookup
@@ -180,7 +186,7 @@ module Bundler
 
     def tsort_each_node
       # MUST sort by name for backwards compatibility
-      @specs.sort_by(&:name).each {|s| yield s }
+      @specs.compact.sort_by(&:name).each {|s| yield s }
     end
 
     def spec_for_dependency(dep, match_current_platform)
